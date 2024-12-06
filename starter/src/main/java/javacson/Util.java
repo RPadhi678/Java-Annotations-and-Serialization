@@ -37,7 +37,7 @@ public class Util {
         boolean isPrintable = codepoint >= ' ' && codepoint <= '~';
         if (isPrintable) {
             if (codepoint == '\\') {
-                // TODO: a single line is missing here
+                return "\\\\";
             }
             return String.valueOf((char) codepoint);
         } else if (codepoint == '\n') {
@@ -46,4 +46,4 @@ public class Util {
             return String.format("\\u%04x", codepoint);
         }
     }
-}
+    
