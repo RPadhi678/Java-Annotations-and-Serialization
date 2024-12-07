@@ -37,7 +37,7 @@ public class Util {
         boolean isPrintable = codepoint >= ' ' && codepoint <= '~';
         if (isPrintable) {
             if (codepoint == '\\') {
-                return "\\\\";
+                return "\\\\"; // adding line of code
             }
             return String.valueOf((char) codepoint);
         } else if (codepoint == '\n') {
