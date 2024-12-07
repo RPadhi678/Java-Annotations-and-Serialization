@@ -19,12 +19,12 @@ import javacson.Annotations.CsonIgnore;
 import javacson.Annotations.CsonName;
 
 /**
- * Handles serialization of Java objects into CSON (Custom Serialized Object Notation).
+ * Handles serialization of Java objects into CSON 
  */
 public class CsonObjectSerializer {
 
     /**
-     * Serializes a list of objects into a CSON formatted string. 
+     * Serializes a list of objects into a CSON formatted string.
      * Combines schemas for unique object types and encodes data for all instances.
      */
     public String serialize(List<Object> objects) {
@@ -39,7 +39,7 @@ public class CsonObjectSerializer {
             Class<?> clazz = obj.getClass();
             String typeName = clazz.getSimpleName();
             List<Field> fields = getSerializableFields(clazz);
-            schemaMap.putIfAbsent(typeName, fields); // Avoid duplicate schemas
+            schemaMap.putIfAbsent(typeName, fields);
             dataBuilder.append(encodeObject(typeName, fields, obj));
         }
 
@@ -65,34 +65,37 @@ public class CsonObjectSerializer {
      * Retrieves public, non-static fields of a class, excluding those annotated with @CsonIgnore.
      * Returns fields sorted lexicographically by name for consistent schema ordering.
      */
-    private List<Field> getSerializableFields(Class<?> clazz) {
-        return Arrays.stream(clazz.getFields())
+    private List<Field> getSerializableFields(Class<?> class1) {
+        return Arrays.stream(class1.getFields())
             .filter(field -> field.getAnnotation(CsonIgnore.class) == null)
             .filter(field -> !Modifier.isStatic(field.getModifiers()))
             .sorted(Comparator.comparing(Field::getName))
             .collect(Collectors.toList());
     }
 
- /**
- * Constructs the schema section for a specific type, including field names and types.
- * Checking for duplicate field names due to @CsonName annotations.
- */
-private String encodeSchema(String typeName, List<Field> fields) {
-    StringBuilder schemaBuilder = new StringBuilder(CsonCodepoints.TYPE_DEF).append(typeName);
+    /**
+     * Constructs the schema section for a specific type,
+     * ensuring no duplicate field names.
+     */
+    private String encodeSchema(String typeName, List<Field> fields) {
+        StringBuilder schemaBuilder = new StringBuilder(CsonCodepoints.TYPE_DEF).append(typeName);
 
-    Set<String> fieldNames = new HashSet<>();
-    for (Field field : fields) {
-        String fieldName = getFieldName(field);
-        if (!fieldNames.add(fieldName)) {
-            throw new CsonSerializationError("Duplicate field name detected in schema: " + fieldName);
+        Set<String> fieldNames = new HashSet<>();
+        for (Field field : fields) {
+            String fieldName = getFieldName(field);
+            if (!fieldNames.add(fieldName)) {
+                throw new CsonSerializationError(
+                    "Duplicate field name detected in schema: " + fieldName
+                );
+            }
+            String fieldType = getCsonType(field);
+            schemaBuilder.append(CsonCodepoints.FIELD_DEF)
+                         .append(fieldName)
+                         .append(CsonCodepoints.FIELD_DEF_TYPE)
+                         .append(fieldType);
         }
-        String fieldType = getCsonType(field);
-        schemaBuilder.append(CsonCodepoints.FIELD_DEF).append(fieldName)
-                     .append(CsonCodepoints.FIELD_DEF_TYPE).append(fieldType);
+        return schemaBuilder.toString();
     }
-    return schemaBuilder.toString();
-}
-
 
     /**
      * Encodes the data section for an object by serializing all its field values in CSON format.
@@ -101,7 +104,8 @@ private String encodeSchema(String typeName, List<Field> fields) {
         StringBuilder objectBuilder = new StringBuilder(CsonCodepoints.OBJECT_VAL).append(typeName);
         for (Field field : fields) {
             Object value = getFieldValue(field, obj);
-            objectBuilder.append(CsonCodepoints.FIELD_VAL).append(encodeValue(value, getCsonType(field)));
+            objectBuilder.append(CsonCodepoints.FIELD_VAL)
+                         .append(encodeValue(value, getCsonType(field)));
         }
         return objectBuilder.toString();
     }
@@ -161,3 +165,5 @@ private String encodeSchema(String typeName, List<Field> fields) {
         };
     }
 }
+
+
